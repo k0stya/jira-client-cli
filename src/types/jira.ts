@@ -81,3 +81,51 @@ export interface JiraErrorResponse {
   errorMessages: string[];
   errors: Record<string, string>;
 }
+
+// Changelog types for time-in-status tracking
+export interface JiraChangelogItem {
+  field: string;
+  fieldtype: string;
+  fieldId?: string;
+  from: string | null;
+  fromString: string | null;
+  to: string | null;
+  toString: string | null;
+}
+
+export interface JiraChangelogHistory {
+  id: string;
+  author: JiraUser;
+  created: string;
+  items: JiraChangelogItem[];
+}
+
+export interface JiraChangelog {
+  startAt: number;
+  maxResults: number;
+  total: number;
+  histories: JiraChangelogHistory[];
+}
+
+export interface JiraIssueWithChangelog extends JiraIssue {
+  changelog?: JiraChangelog;
+}
+
+// Time in status report types
+export interface StatusDuration {
+  status: string;
+  durationMs: number;
+}
+
+export interface IssueTimeInStatus {
+  issueKey: string;
+  statusDurations: Map<string, number>;
+}
+
+export interface TimeInStatusReport {
+  issues: IssueTimeInStatus[];
+  allStatuses: string[];
+  totals: Map<string, number>;
+  averages: Map<string, number>;
+  medians: Map<string, number>;
+}

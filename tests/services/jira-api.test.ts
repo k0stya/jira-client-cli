@@ -98,7 +98,7 @@ describe('JiraApiClient', () => {
   });
 
   describe('searchIssues', () => {
-    it('should search issues with JQL', async () => {
+    it('should search issues with JQL using GET', async () => {
       vi.mocked(global.fetch).mockResolvedValueOnce({
         ok: true,
         json: () =>
@@ -115,13 +115,14 @@ describe('JiraApiClient', () => {
 
       expect(result.issues).toHaveLength(1);
       expect(result.issues[0].key).toBe('PROJ-123');
-      expect(global.fetch).toHaveBeenCalledWith(
-        'https://test.atlassian.net/rest/api/3/search',
-        expect.objectContaining({
-          method: 'POST',
-          body: expect.stringContaining('project = PROJ'),
-        })
-      );
+
+      // Verify GET request to /search/jql endpoint with query params
+      const fetchCall = vi.mocked(global.fetch).mock.calls[0];
+      const url = fetchCall[0] as string;
+      expect(url).toContain('/search/jql?');
+      expect(url).toContain('jql=project');
+      expect(url).toContain('maxResults=50');
+      expect(url).toContain('startAt=0');
     });
   });
 });

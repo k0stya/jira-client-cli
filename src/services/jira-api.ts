@@ -1,5 +1,5 @@
 import type { Profile } from '../types/config.js';
-import type { JiraIssue, JiraSearchResult, JiraUser } from '../types/jira.js';
+import type { JiraIssue, JiraSearchResult, JiraUser, JiraIssueWithChangelog } from '../types/jira.js';
 import { AuthenticationError, NotFoundError, JiraApiError, RateLimitError, PermissionError } from '../utils/errors.js';
 
 export class JiraApiClient {
@@ -68,14 +68,36 @@ export class JiraApiClient {
   }
 
   async searchIssues(jql: string, maxResults = 50, startAt = 0): Promise<JiraSearchResult> {
-    return this.request<JiraSearchResult>('/search', {
-      method: 'POST',
-      body: JSON.stringify({
-        jql,
-        maxResults,
-        startAt,
-        fields: ['summary', 'status', 'priority', 'assignee', 'reporter', 'created', 'updated', 'issuetype', 'project'],
-      }),
+    const params = new URLSearchParams({
+      jql,
+      maxResults: maxResults.toString(),
+      startAt: startAt.toString(),
+      fields: 'summary,status,priority,assignee,reporter,created,updated,issuetype,project',
     });
+    return this.request<JiraSearchResult>(`/search/jql?${params.toString()}`);
+  }
+
+  async getIssueWithChangelog(issueKey: string): Promise<JiraIssueWithChangelog> {
+    return this.request<JiraIssueWithChangelog>(
+      `/issue/${encodeURIComponent(issueKey)}?expand=changelog&fields=summary,status,created`
+    );
+  }
+
+  async searchIssuesWithChangelog(
+    jql: string,
+    maxResults = 50,
+    startAt = 0
+  ): Promise<{ issues: JiraIssueWithChangelog[]; total: number }> {
+    const params = new URLSearchParams({
+      jql,
+      maxResults: maxResults.toString(),
+      startAt: startAt.toString(),
+      fields: 'summary,status,created',
+      expand: 'changelog',
+    });
+    const result = await this.request<JiraSearchResult & { issues: JiraIssueWithChangelog[] }>(
+      `/search/jql?${params.toString()}`
+    );
+    return { issues: result.issues, total: result.total };
   }
 }

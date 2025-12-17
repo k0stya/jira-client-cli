@@ -12,9 +12,62 @@ npm install -g jira-client-cli
 
 ## Quick Start
 
+### Interactive Mode
+
+Start the CLI in interactive mode by running without arguments:
+
+```bash
+jira-cli
+```
+
+This opens an interactive session where you can run commands:
+
+```
+  JIRA CLI - Interactive Mode
+  Type "help" for available commands, "exit" to quit.
+
+  No active profile. Run "profile create" to get started.
+
+jira-cli> profile create
+? Profile name: work
+? JIRA domain: company.atlassian.net
+? Email: user@company.com
+? API token: ****
+✓ Authenticated as John Doe
+✓ Profile "work" created and set as active.
+
+jira-cli [work]> issue get PROJ-123
+────────────────────────────────────────────────────────
+PROJ-123: Fix login button
+────────────────────────────────────────────────────────
+Type:       Bug
+Status:     In Progress
+...
+
+jira-cli [work]> exit
+Goodbye!
+```
+
+### One-Shot Mode
+
+You can also run individual commands directly:
+
+```bash
+jira-cli profile create
+jira-cli issue get PROJ-123
+```
+
 ### 1. Create a Profile
 
 First, create a profile with your JIRA credentials:
+
+```bash
+jira-cli
+# Then in the interactive session:
+profile create
+```
+
+Or directly:
 
 ```bash
 jira-cli profile create
@@ -77,8 +130,41 @@ jira-cli profile delete <name> --force  # Skip confirmation
 
 ```bash
 # Get issue details
-jira-cli issue get <issue-key>
-jira-cli issue get PROJ-123 --json
+issue get <issue-key>
+issue get PROJ-123 --json
+
+# Calculate time in status for issues (outputs CSV)
+issue time-in-status "project = PROJ"
+issue time-in-status "project = PROJ AND status = Done" --output report.csv
+issue time-in-status "assignee = currentUser()" --max-results 200
+```
+
+### Session Commands (Interactive Mode)
+
+```bash
+help, ?       Show available commands
+clear, cls    Clear the screen
+exit, quit, q Exit the CLI
+```
+
+### Time in Status Report
+
+The `time-in-status` command calculates how long each issue spent in each status and outputs a CSV report with:
+
+- Time per ticket per status (H:MM:SS format)
+- Total time per status
+- Average time per status
+- Median time per status
+
+Example output:
+```csv
+TICKET ID,To Do,In Progress,Done
+PROJ-1,1:30:00,4:15:30,2:00:00
+PROJ-2,0:45:00,3:30:15,1:15:45
+...
+"Total, h",2:15:00,7:45:45,3:15:45
+"Average, h",1:07:30,3:52:52,1:37:52
+"Median, h",1:07:30,3:52:52,1:37:52
 ```
 
 ## Multiple Profiles
